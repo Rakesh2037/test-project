@@ -1,13 +1,15 @@
 package com.abc.rangeorganiser;
 
 /**
- * 
- * @author rakesh.kumar
  * Class representing an individual range of numbers
+ * @author rakesh.kumar
  */
 public class NumberRange{
 
+	// upper limit of number range
 	private Integer upperLimit;
+	
+	// lower limit of the number range
 	private Integer lowerLimit;
 	
 	// Default constructor

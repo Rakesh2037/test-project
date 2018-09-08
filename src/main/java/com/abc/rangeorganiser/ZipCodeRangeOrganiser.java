@@ -7,8 +7,9 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
+import com.abc.rangeorganiser.exception.InvaliNumberRangeException;
+
 /**
- * @author rakesh.kumar
  *         Problem Statement: Given a collection of 5-digit ZIP code ranges
  *         (each range includes both their upper and lower bounds), provide an
  *         algorithm that produces the minimum number of ranges required to
@@ -17,9 +18,11 @@ import org.apache.log4j.Logger;
  *         [94133,94133] [94200,94299] [94600,94699] If the input is
  *         [94133,94133] [94200,94299] [94226,94399] then The output should be 
  *         [94133,94133] [94200,94399]
- *         NOTES: The ranges above are just examples, your implementation should
+ *         NOTES: The ranges above are just examples, implementation should
  *         work for any set of arbitrary ranges. Ranges may be provided in
- *         arbitrary order, Ranges may or may not overlap
+ *         arbitrary order, Ranges may or may not overlap.
+ *         
+ *@author rakesh.kumar
  */
 public class ZipCodeRangeOrganiser {
 
@@ -34,36 +37,40 @@ public class ZipCodeRangeOrganiser {
 	public String processZipCodeRanges(String zipCodeStrings) {
 		logger.info("Incoming zipCodeStrings:"+zipCodeStrings);
 		List<NumberRange> zipCodeRanges = new ArrayList<>();
+		
+		// Pattern allowing 0 or more number of characters contained in []
 		Pattern textPattern = Pattern.compile("\\[(.*?)\\]");
 		Matcher matcher = textPattern.matcher(zipCodeStrings);
 		NumberRange numberRange;
-		while (matcher.find()) {
-			numberRange = new NumberRange();
+		while (matcher.find()) { 
 			String group = matcher.group(1);
-			String [] lowerUpperValues = group.split(",");
+			String [] lowerUpperLimitValues = group.split(",");
 			
 			// As parsing of non-numeric value can throw exception
 			try {
-				Integer lowerLimit = Integer.parseInt(lowerUpperValues[0]);
-				Integer upperLimit = Integer.parseInt(lowerUpperValues[1]);
-				// Business Rule: As given that zip code of 5 digits only
-				if (lowerLimit > 99999 || lowerLimit < 10000) {
+				Integer lowerLimit = Integer.parseInt(lowerUpperLimitValues[0]);
+				Integer upperLimit = Integer.parseInt(lowerUpperLimitValues[1]);
+				
+				numberRange = new NumberRange();
+				// Business Rule: As it is given that ZIP code of 5 digits only
+				if (lowerLimit < 10000 || lowerLimit > 99999  ) {
 					logger.error(INVALID_INPUT);
+					throw new InvaliNumberRangeException("Invalid Number Range"); // Need to escape the iteration
 				} else {
 					numberRange.setLowerLimit(lowerLimit);
 				}
-				if (upperLimit > 99999 || upperLimit < 10000) {
-					logger.error(INVALID_INPUT);
+				if (upperLimit < 10000 || upperLimit > 99999) {
+					logger.error(INVALID_INPUT); // Need to escape the iteration
+					throw new InvaliNumberRangeException("Invalid Number Range");
 				} else {
 					numberRange.setUpperLimit(upperLimit);
 				}
 				zipCodeRanges.add(numberRange);
-			} catch (Exception e) {
-				logger.error(INVALID_INPUT + lowerUpperValues);
+			} catch (NumberFormatException | InvaliNumberRangeException e) {
+				logger.error(INVALID_INPUT + lowerUpperLimitValues+ ","+ e.getMessage());
 				/*
-				 * Can throw NumberFormatException if we want to break the processing even if a
-				 * single invalid input found Currently ignoring these values and continuing to
-				 * next iteration.
+				 * Can throw NumberFormatException if we want to break the processing even if a single
+				 * invalid input found, currently ignoring these values and continuing to next iteration.
 				 */
 				continue;
 			}
@@ -81,7 +88,7 @@ public class ZipCodeRangeOrganiser {
 	 * @param organisedNumberRanges
 	 * @return String 
 	 */
-	String getAsString(final List<NumberRange> organisedNumberRanges) {
+	private String getAsString(final List<NumberRange> organisedNumberRanges) {
 		StringBuilder builder = new StringBuilder();
 		for (NumberRange nr : organisedNumberRanges) {
 			builder.append(nr.toString()+" ");
@@ -95,14 +102,15 @@ public class ZipCodeRangeOrganiser {
 	 * @param numberRanges as List of NumberRange
 	 * @return List of Number Ranges
 	 */
-	List<NumberRange> organiseRanges(final List<NumberRange> numberRanges) {
-		if (null == numberRanges || numberRanges.isEmpty()) {
+	private List<NumberRange> organiseRanges(final List<NumberRange> numberRanges) {
+		if (numberRanges.isEmpty()) {
 			return numberRanges;
 		}
 		logger.info("Printing incoming string by iteration objects list:");
 		for (NumberRange nr : numberRanges) {
 			logger.info(nr.toString());
 		}
+		// Sorting of NumberRange objects in the list
 		numberRanges.sort(
 				(final NumberRange nr1, final NumberRange nr2) -> (nr1.getLowerLimit()).compareTo(nr2.getLowerLimit()));
 
