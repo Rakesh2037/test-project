@@ -26,6 +26,7 @@ import com.abc.rangeorganiser.exception.InvaliNumberRangeException;
  */
 public class ZipCodeRangeOrganiser {
 
+	private static final String INVALID_NUMBER_RANGE = "Invalid Number Range";
 	private static final String INVALID_INPUT = "Invalid Input";
 	private Logger logger = Logger.getLogger(ZipCodeRangeOrganiser.class.getName());
 
@@ -36,50 +37,56 @@ public class ZipCodeRangeOrganiser {
 	 */
 	public String processZipCodeRanges(String zipCodeStrings) {
 		logger.info("Incoming zipCodeStrings:"+zipCodeStrings);
-		List<NumberRange> zipCodeRanges = new ArrayList<>();
-		
-		// Pattern allowing 0 or more number of characters contained in []
-		Pattern textPattern = Pattern.compile("\\[(.*?)\\]");
-		Matcher matcher = textPattern.matcher(zipCodeStrings);
-		NumberRange numberRange;
-		while (matcher.find()) { 
-			String group = matcher.group(1);
-			String [] lowerUpperLimitValues = group.split(",");
+	
+		// Essential null check for incoming zipCodestring
+		if(null != zipCodeStrings && !"".equals(zipCodeStrings.trim())) {
+			List<NumberRange> zipCodeRanges = new ArrayList<>();
 			
-			// As parsing of non-numeric value can throw exception
-			try {
-				Integer lowerLimit = Integer.parseInt(lowerUpperLimitValues[0]);
-				Integer upperLimit = Integer.parseInt(lowerUpperLimitValues[1]);
+			// Pattern allowing 0 or more number of characters contained in []
+			Pattern textPattern = Pattern.compile("\\[(.*?)\\]");
+			Matcher matcher = textPattern.matcher(zipCodeStrings);
+			NumberRange numberRange;
+			while (matcher.find()) { 
+				String matchedGroup = matcher.group(1);
+				String [] lowerUpperLimitValues = matchedGroup.split(",");
 				
-				numberRange = new NumberRange();
-				// Business Rule: As it is given that ZIP code of 5 digits only
-				if (lowerLimit < 10000 || lowerLimit > 99999  ) {
-					logger.error(INVALID_INPUT);
-					throw new InvaliNumberRangeException("Invalid Number Range"); // Need to escape the iteration
-				} else {
-					numberRange.setLowerLimit(lowerLimit);
+				// As parsing of non-numeric value can throw exception
+				try {
+					Integer lowerLimit = Integer.parseInt(lowerUpperLimitValues[0]);
+					Integer upperLimit = Integer.parseInt(lowerUpperLimitValues[1]);
+					
+					numberRange = new NumberRange();
+					// Business Rule: As it is given that ZIP code of 5 digits only
+					if (lowerLimit < 10000 || lowerLimit > 99999  ) {
+						logger.error(INVALID_INPUT);
+						throw new InvaliNumberRangeException(INVALID_NUMBER_RANGE);
+					} else {
+						numberRange.setLowerLimit(lowerLimit);
+					}
+					if (upperLimit < 10000 || upperLimit > 99999) {
+						logger.error(INVALID_INPUT);
+						throw new InvaliNumberRangeException(INVALID_NUMBER_RANGE);
+					} else {
+						numberRange.setUpperLimit(upperLimit);
+					}
+					zipCodeRanges.add(numberRange);
+				} catch (NumberFormatException | InvaliNumberRangeException e) {
+					logger.error(INVALID_INPUT + matchedGroup+ ","+ e.getMessage());
+					/*
+					 * Can throw NumberFormatException if we want to break the processing even if a single
+					 * invalid input found, currently ignoring these values and continuing to next iteration.
+					 */
+					continue;
 				}
-				if (upperLimit < 10000 || upperLimit > 99999) {
-					logger.error(INVALID_INPUT); // Need to escape the iteration
-					throw new InvaliNumberRangeException("Invalid Number Range");
-				} else {
-					numberRange.setUpperLimit(upperLimit);
-				}
-				zipCodeRanges.add(numberRange);
-			} catch (NumberFormatException | InvaliNumberRangeException e) {
-				logger.error(INVALID_INPUT + lowerUpperLimitValues+ ","+ e.getMessage());
-				/*
-				 * Can throw NumberFormatException if we want to break the processing even if a single
-				 * invalid input found, currently ignoring these values and continuing to next iteration.
-				 */
-				continue;
 			}
+			if (zipCodeRanges.isEmpty()) {
+				logger.error(INVALID_INPUT);
+			}
+			List<NumberRange> organisedNumberRanges = organiseRanges(zipCodeRanges);
+			return getAsString(organisedNumberRanges);
+		}else {
+			return "";
 		}
-		if (zipCodeRanges.isEmpty()) {
-			logger.error(INVALID_INPUT);
-		}
-		List<NumberRange> organisedNumberRanges = organiseRanges(zipCodeRanges);
-		return getAsString(organisedNumberRanges);
 		
 	}
 	

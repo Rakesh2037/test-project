@@ -124,4 +124,22 @@ public class ZipCodeRangeOrganiserTest {
 		logger.info("Input string:"+output);
 		assertTrue("".equals(output));
 	}
+	
+	@Test
+	public void testOrganiseZipCodeIgnoreInvalidInputRange9() {
+		String input = null;
+		logger.info("Input string:"+input);
+		String output = classUnderTest.processZipCodeRanges(input);
+		logger.info("Input string:"+output);
+		assertTrue("".equals(output));
+	}
+	
+	@Test
+	public void testOrganiseZipCodeIgnoreInvalidInputRange10() {
+		String input = "  ";
+		logger.info("Input string:"+input);
+		String output = classUnderTest.processZipCodeRanges(input);
+		logger.info("Input string:"+output);
+		assertTrue("".equals(output));
+	}
 }
